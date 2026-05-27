@@ -40,3 +40,15 @@ def test_get_provider_unknown_raises():
         assert "unknown provider" in str(exc)
     else:
         raise AssertionError("expected ValueError")
+
+
+def test_real_provider_stubs_resolve_and_refuse_network():
+    for name in ("openai", "anthropic"):
+        provider = get_provider(name)
+        assert provider.name == name
+        try:
+            provider.complete("hi")
+        except NotImplementedError:
+            pass
+        else:
+            raise AssertionError("stub should not perform network calls")
