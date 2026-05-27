@@ -93,6 +93,7 @@ make bench-regress    # gate at 30%
 - [docs/jailbreak-battery.md](docs/jailbreak-battery.md)
 - [docs/regression.md](docs/regression.md)
 - [docs/ci-integration.md](docs/ci-integration.md)
+- [docs/battery-versioning.md](docs/battery-versioning.md)
 
 ## License
 

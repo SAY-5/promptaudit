@@ -86,6 +86,8 @@ class JailbreakGate:
             details={
                 "battery_version": self.battery.version,
                 "per_category_rate": per_category_rate,
+                "per_category_total": per_category_total,
+                "per_category_pass": per_category_pass,
                 "failures": failures,
             },
         )

@@ -28,6 +28,9 @@ class Baseline(BaseModel):
     model: str
     battery_version: int = 1
     taxonomy_version: int = 1
+    # Jailbreak categories covered when the baseline was recorded. Used to tell a
+    # newly-covered attack class apart from a true regression on a known class.
+    battery_categories: list[str] = Field(default_factory=list)
     gates: dict[str, GateBaseline] = Field(default_factory=dict)
 
     @classmethod
@@ -45,6 +48,7 @@ class Baseline(BaseModel):
         *,
         battery_version: int = 1,
         taxonomy_version: int = 1,
+        battery_categories: list[str] | None = None,
     ) -> Baseline:
         gates = {
             name: GateBaseline(rate=res.pass_rate, n=res.total) for name, res in results.items()
@@ -53,6 +57,7 @@ class Baseline(BaseModel):
             model=model,
             battery_version=battery_version,
             taxonomy_version=taxonomy_version,
+            battery_categories=battery_categories or [],
             gates=gates,
         )
 

@@ -117,7 +117,15 @@ def baseline(
         taxonomy_path=taxonomy,
         evalset_path=evalset,
     )
-    base = Baseline.from_results(model_name, results, battery_version=bat_v, taxonomy_version=tax_v)
+    rates = results["jailbreak"].details.get("per_category_rate", {})
+    categories = sorted(rates) if isinstance(rates, dict) else []
+    base = Baseline.from_results(
+        model_name,
+        results,
+        battery_version=bat_v,
+        taxonomy_version=tax_v,
+        battery_categories=categories,
+    )
     base.to_json(out_path)
     log.info("baseline written", out=out_path, gates=list(results))
 

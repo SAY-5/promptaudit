@@ -13,10 +13,11 @@ from promptaudit.battery import load_battery
 from promptaudit.gates.jailbreak import JailbreakGate
 from promptaudit.gates.quality import QualityGate
 from promptaudit.gates.safety import HarmTaxonomy, SafetyGate
-from promptaudit.models import GateResult
+from promptaudit.models import GateResult, Verdict
 from promptaudit.provider.base import Provider
 from promptaudit.report import AuditReport, find_newly_succeeded
 from promptaudit.rubric import load_evalset
+from promptaudit.versioning import classify_failures
 
 
 def run_gates(
@@ -63,7 +64,23 @@ def audit(
         quality_threshold=quality_threshold,
     )
     baseline = Baseline.from_json(baseline_path)
-    regression = baseline.compare(results)
+
+    # Versioning: classify jailbreak failures into true regressions vs failures
+    # on attack classes the baseline never covered. Failures in newly-covered
+    # classes must not count against the regression comparison.
+    versioning = classify_failures(
+        results["jailbreak"],
+        baseline_battery_version=baseline.battery_version,
+        baseline_categories=set(baseline.battery_categories),
+    )
+
+    compare_results = dict(results)
+    if versioning.is_coverage_expansion and versioning.newly_covered_and_failing:
+        compare_results["jailbreak"] = _restrict_to_baseline_categories(
+            results["jailbreak"], set(versioning.new_categories)
+        )
+
+    regression = baseline.compare(compare_results)
 
     newly = find_newly_succeeded(results["jailbreak"], baseline_failures=set())
     name = model_name or baseline.model
@@ -73,4 +90,30 @@ def audit(
         gates=results,
         regression=regression,
         newly_succeeded_jailbreaks=newly,
+        versioning=versioning,
+    )
+
+
+def _restrict_to_baseline_categories(jailbreak: GateResult, new_categories: set[str]) -> GateResult:
+    """Recompute the jailbreak result excluding prompts in newly-added classes.
+
+    Newly-covered failures should not look like a refusal-rate regression, so the
+    comparison uses only the categories present in the baseline battery version.
+    Counts are taken from the gate's per-category totals, so the restriction is
+    exact.
+    """
+    per_total = jailbreak.details.get("per_category_total", {})
+    per_pass = jailbreak.details.get("per_category_pass", {})
+    per_total = per_total if isinstance(per_total, dict) else {}
+    per_pass = per_pass if isinstance(per_pass, dict) else {}
+
+    total = sum(n for cat, n in per_total.items() if cat not in new_categories)
+    passed = sum(p for cat, p in per_pass.items() if cat not in new_categories)
+    verdict = Verdict.PASS if passed == total else Verdict.FAIL
+    return GateResult(
+        gate=jailbreak.gate,
+        total=total,
+        passed=passed,
+        verdict=verdict,
+        details={**jailbreak.details, "restricted_to_baseline_categories": True},
     )

@@ -2,6 +2,17 @@
   "model": "model_v1",
   "battery_version": 1,
   "taxonomy_version": 1,
+  "battery_categories": [
+    "benign_control",
+    "encoding",
+    "hypothetical",
+    "ignore_instructions",
+    "obfuscation",
+    "payload_injection",
+    "prompt_leak",
+    "roleplay",
+    "token_smuggling"
+  ],
   "gates": {
     "safety": {
       "rate": 1.0,

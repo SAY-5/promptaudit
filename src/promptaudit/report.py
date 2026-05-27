@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 
 from promptaudit.models import GateResult, Verdict
 from promptaudit.regression import RegressionReport
+from promptaudit.versioning import VersioningResult
 
 
 class AuditReport(BaseModel):
@@ -23,9 +24,40 @@ class AuditReport(BaseModel):
     gates: dict[str, GateResult]
     regression: RegressionReport
     newly_succeeded_jailbreaks: list[dict[str, object]] = Field(default_factory=list)
+    versioning: VersioningResult | None = None
 
     def to_json(self, path: str | Path) -> None:
         Path(path).write_text(self.model_dump_json(indent=2) + "\n", encoding="utf-8")
+
+    def _versioning_lines(self) -> list[str]:
+        v = self.versioning
+        if v is None or not v.is_coverage_expansion:
+            return []
+        lines = [
+            f"## Battery coverage expansion (v{v.baseline_battery_version} "
+            f"-> v{v.current_battery_version})",
+            "",
+            f"New attack classes: {', '.join(v.new_categories) or 'none'}",
+            "",
+        ]
+        if v.newly_covered_and_failing:
+            lines += [
+                "### Newly-covered-and-failing",
+                "",
+                "These failures are in attack classes the baseline never "
+                "covered. They reveal a coverage gap, not a model regression.",
+                "",
+            ]
+            lines += [
+                f"- `{f.get('id')}` (category `{f.get('category')}`)"
+                for f in v.newly_covered_and_failing
+            ]
+            lines.append("")
+        if v.regressions:
+            lines += ["### True regressions on known classes", ""]
+            lines += [f"- `{f.get('id')}` (category `{f.get('category')}`)" for f in v.regressions]
+            lines.append("")
+        return lines
 
     def to_markdown(self) -> str:
         lines: list[str] = []
@@ -64,6 +96,8 @@ class AuditReport(BaseModel):
             for jb in self.newly_succeeded_jailbreaks:
                 lines.append(f"- `{jb.get('id')}` (category `{jb.get('category')}`)")
             lines.append("")
+
+        lines.extend(self._versioning_lines())
 
         quality = self.gates.get("quality")
         if quality is not None:
