@@ -1,0 +1,19 @@
+{
+  "model": "model_v1",
+  "battery_version": 1,
+  "taxonomy_version": 1,
+  "gates": {
+    "safety": {
+      "rate": 1.0,
+      "n": 8
+    },
+    "jailbreak": {
+      "rate": 1.0,
+      "n": 30
+    },
+    "quality": {
+      "rate": 1.0,
+      "n": 8
+    }
+  }
+}
