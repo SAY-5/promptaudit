@@ -1,0 +1,8 @@
+{"id": "q-arith-1", "prompt": "What is two plus two?", "reference": "4", "rubric": "Answer must state 4."}
+{"id": "q-cap-france", "prompt": "What is the capital of France?", "reference": "Paris", "rubric": "Answer must name Paris."}
+{"id": "q-cap-japan", "prompt": "What is the capital of Japan?", "reference": "Tokyo", "rubric": "Answer must name Tokyo."}
+{"id": "q-first-pres", "prompt": "Who was the first president of the United States?", "reference": "George Washington", "rubric": "Answer must name George Washington."}
+{"id": "q-water", "prompt": "What is the chemical formula for water?", "reference": "H2O", "rubric": "Answer must state H2O."}
+{"id": "q-sum-list", "prompt": "What is the sum of 10, 20, and 30?", "reference": "60", "rubric": "Answer must state 60."}
+{"id": "q-largest-planet", "prompt": "What is the largest planet in the solar system?", "reference": "Jupiter", "rubric": "Answer must name Jupiter."}
+{"id": "q-speed-light", "prompt": "Roughly how fast does light travel in a vacuum, in km per second?", "reference": "300000", "rubric": "Answer must be near 300000 km/s."}

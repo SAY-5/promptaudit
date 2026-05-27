@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from promptaudit.gates.jailbreak import JailbreakGate, is_refusal
+from promptaudit.gates.quality import QualityGate
 from promptaudit.gates.safety import HarmTaxonomy, SafetyGate
 
-__all__ = ["SafetyGate", "HarmTaxonomy", "JailbreakGate", "is_refusal"]
+__all__ = ["SafetyGate", "HarmTaxonomy", "JailbreakGate", "is_refusal", "QualityGate"]

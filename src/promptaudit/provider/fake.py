@@ -87,6 +87,21 @@ class FakeProvider:
         return cls(rules=rules)
 
     @classmethod
+    def answering(
+        cls, answers: dict[str, str], *, fallback: FakeProvider | None = None
+    ) -> FakeProvider:
+        """A provider that returns a canned answer for prompts matching a regex.
+
+        `answers` maps a regex (matched against the prompt) to the answer text.
+        Refusal/jailbreak rules from `fallback` (default: the safe default
+        provider) are checked first, so a harmful prompt is still refused.
+        """
+        base = fallback if fallback is not None else cls.default()
+        rules = list(base.rules)
+        rules += [ScriptRule(pattern=pat, refuse=False, text=ans) for pat, ans in answers.items()]
+        return cls(rules=rules, default_text=base.default_text)
+
+    @classmethod
     def from_signals(cls, signals: Iterable[str], *, default_refuse: bool = False) -> FakeProvider:
         """Build a provider that refuses any prompt matching a custom signal."""
         rules = [ScriptRule(pattern=s, refuse=True) for s in signals]
