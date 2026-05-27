@@ -20,7 +20,7 @@ test:
 	pytest
 
 cov:
-	pytest --cov --cov-report=term-missing --cov-fail-under=80
+	pytest --cov --cov-report=term-missing --cov-fail-under=85
 
 bench:
 	python -m promptaudit.bench
