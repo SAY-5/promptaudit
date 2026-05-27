@@ -21,6 +21,7 @@ from promptaudit.provider import get_provider
 from promptaudit.provider.fake import FakeProvider
 from promptaudit.report import AuditReport
 from promptaudit.rubric import load_evalset
+from promptaudit.trend import analyze, record_run
 
 log = get_logger("promptaudit.cli")
 
@@ -62,6 +63,7 @@ _evalset_opt = click.option("--evalset", default=_DEFAULT_EVALSET, show_default=
 @_evalset_opt
 @click.option("--report-dir", default="reports", show_default=True)
 @click.option("--model-name", default=None)
+@click.option("--history", "history_path", default=None, help="Append per-category rates here.")
 def run(
     provider: str,
     baseline_path: str,
@@ -70,6 +72,7 @@ def run(
     evalset: str,
     report_dir: str,
     model_name: str | None,
+    history_path: str | None,
 ) -> None:
     """Run the audit and fail the build on a regression."""
     prov = _build_provider(provider, evalset)
@@ -82,6 +85,8 @@ def run(
         model_name=model_name,
     )
     json_path, md_path = report.write(report_dir)
+    if history_path is not None:
+        record_run(history_path, report.trend_rates())
     log.info(
         "audit complete",
         verdict=report.verdict.value,
@@ -92,6 +97,24 @@ def run(
         log.error("regression", reason=reason)
     if report.verdict is Verdict.FAIL:
         sys.exit(1)
+
+
+@cli.command()
+@click.option("--history", "history_path", required=True, help="The run history JSONL.")
+@click.option("--category", required=True, help="e.g. jailbreak.roleplay")
+@click.option("--last-n", default=10, show_default=True, type=int)
+def trend(history_path: str, category: str, last_n: int) -> None:
+    """Show a category's pass rate over recent runs and fit a slope."""
+    analysis = analyze(history_path, category, last_n=last_n)
+    click.echo(f"category: {analysis.category}")
+    click.echo(f"runs: {analysis.n}")
+    for point in analysis.points:
+        click.echo(f"  {point.timestamp}  {point.rate * 100:.1f}%")
+    click.echo(f"slope: {analysis.slope:+.5f} per run ({analysis.classification})")
+    if analysis.slow_regression:
+        click.echo("slow-regression: yes (sustained drift below the per-run gate)")
+        sys.exit(2)
+    click.echo("slow-regression: no")
 
 
 @cli.command()

@@ -94,6 +94,7 @@ make bench-regress    # gate at 30%
 - [docs/regression.md](docs/regression.md)
 - [docs/ci-integration.md](docs/ci-integration.md)
 - [docs/battery-versioning.md](docs/battery-versioning.md)
+- [docs/trend-tracking.md](docs/trend-tracking.md)
 
 ## License
 

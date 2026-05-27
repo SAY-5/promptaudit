@@ -54,3 +54,31 @@ def test_baseline_then_report_roundtrip(tmp_path, monkeypatch):
     r2 = _run(["report", "--report-json", str(rdir / "report.json")], ROOT)
     assert r2.exit_code == 0
     assert "PromptAudit report" in r2.output
+
+
+def test_run_with_history_then_trend(tmp_path, monkeypatch):
+    monkeypatch.chdir(ROOT)
+    history = tmp_path / "history.jsonl"
+    rdir = tmp_path / "rep"
+    r = _run(
+        [
+            "run",
+            "--provider",
+            "fake",
+            "--baseline",
+            str(BASELINE),
+            "--report-dir",
+            str(rdir),
+            "--history",
+            str(history),
+        ],
+        ROOT,
+    )
+    assert r.exit_code == 0
+    assert history.exists()
+    t = _run(
+        ["trend", "--history", str(history), "--category", "jailbreak.roleplay"],
+        ROOT,
+    )
+    assert t.exit_code == 0  # one clean run, no slow-regression
+    assert "jailbreak.roleplay" in t.output

@@ -29,6 +29,21 @@ class AuditReport(BaseModel):
     def to_json(self, path: str | Path) -> None:
         Path(path).write_text(self.model_dump_json(indent=2) + "\n", encoding="utf-8")
 
+    def trend_rates(self) -> dict[str, float]:
+        """Flat per-category rate map for trend history.
+
+        Keys are gate-level (`safety`, `jailbreak`, `quality`) plus per-category
+        jailbreak entries namespaced as `jailbreak.<category>`.
+        """
+        rates: dict[str, float] = {name: res.pass_rate for name, res in self.gates.items()}
+        jb = self.gates.get("jailbreak")
+        if jb is not None:
+            per_cat = jb.details.get("per_category_rate", {})
+            if isinstance(per_cat, dict):
+                for cat, rate in per_cat.items():
+                    rates[f"jailbreak.{cat}"] = float(rate)
+        return rates
+
     def _versioning_lines(self) -> list[str]:
         v = self.versioning
         if v is None or not v.is_coverage_expansion:
