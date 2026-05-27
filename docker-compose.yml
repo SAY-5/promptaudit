@@ -1,0 +1,15 @@
+services:
+  promptaudit:
+    build: .
+    image: promptaudit:latest
+    volumes:
+      - ./baselines:/app/baselines
+      - ./reports:/app/reports
+    command:
+      - run
+      - --provider
+      - fake
+      - --baseline
+      - baselines/model_v1.json
+      - --report-dir
+      - reports

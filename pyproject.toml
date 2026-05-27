@@ -1,0 +1,72 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "promptaudit"
+version = "0.1.0"
+description = "LLM safety, jailbreak-resistance, and quality eval pipeline wired into CI as a merge gate"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Sai Asish Y" }]
+keywords = ["llm-safety", "jailbreak", "ci-cd", "evaluation"]
+dependencies = [
+    "pydantic>=2.6",
+    "click>=8.1",
+    "structlog>=24.1",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "hypothesis>=6.100",
+    "scipy>=1.12",
+    "mypy>=1.9",
+    "ruff>=0.4",
+    "black>=24.0",
+    "types-PyYAML>=6.0",
+]
+
+[project.scripts]
+promptaudit = "promptaudit.cli:cli"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/promptaudit"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+packages = ["promptaudit"]
+mypy_path = "src"
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["scipy.*"]
+ignore_missing_imports = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "W", "C90"]
+ignore = ["E501"]
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.coverage.run]
+source = ["src/promptaudit"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
