@@ -1,0 +1,8 @@
+# Example "model under test" config a downstream repo would commit.
+# PromptAudit reads the provider and the artifacts to gate the model against.
+model_name: model_v1
+provider: fake          # use openai/anthropic to audit a live model
+baseline: baselines/model_v1.json
+battery: batteries/jailbreaks.yaml
+taxonomy: batteries/harm_taxonomy.yaml
+evalset: evalsets/quality_v1.jsonl

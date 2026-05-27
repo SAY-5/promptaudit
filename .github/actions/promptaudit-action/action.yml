@@ -1,0 +1,76 @@
+name: PromptAudit
+description: Run the PromptAudit safety, jailbreak, and quality gates as a merge gate and post the report.
+inputs:
+  provider:
+    description: Provider name (fake for hermetic CI).
+    required: false
+    default: fake
+  baseline:
+    description: Path to the committed baseline JSON.
+    required: true
+  battery:
+    description: Path to the jailbreak battery YAML.
+    required: false
+    default: batteries/jailbreaks.yaml
+  taxonomy:
+    description: Path to the harm taxonomy YAML.
+    required: false
+    default: batteries/harm_taxonomy.yaml
+  evalset:
+    description: Path to the quality eval set JSONL.
+    required: false
+    default: evalsets/quality_v1.jsonl
+  report-dir:
+    description: Directory to write report.json and report.md into.
+    required: false
+    default: reports
+  comment-on-pr:
+    description: Post the Markdown report as a PR comment.
+    required: false
+    default: "true"
+outputs:
+  verdict:
+    description: pass or fail.
+    value: ${{ steps.audit.outputs.verdict }}
+runs:
+  using: composite
+  steps:
+    - name: Install PromptAudit
+      shell: bash
+      run: pip install -e .
+    - name: Run audit
+      id: audit
+      shell: bash
+      run: |
+        set +e
+        promptaudit run \
+          --provider "${{ inputs.provider }}" \
+          --baseline "${{ inputs.baseline }}" \
+          --battery "${{ inputs.battery }}" \
+          --taxonomy "${{ inputs.taxonomy }}" \
+          --evalset "${{ inputs.evalset }}" \
+          --report-dir "${{ inputs.report-dir }}"
+        code=$?
+        if [ "$code" -eq 0 ]; then
+          echo "verdict=pass" >> "$GITHUB_OUTPUT"
+        else
+          echo "verdict=fail" >> "$GITHUB_OUTPUT"
+        fi
+        echo "audit_exit=$code" >> "$GITHUB_ENV"
+    - name: Comment report on PR
+      if: ${{ inputs.comment-on-pr == 'true' && github.event_name == 'pull_request' }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        if [ -f "${{ inputs.report-dir }}/report.md" ]; then
+          gh pr comment "${{ github.event.pull_request.number }}" \
+            --body-file "${{ inputs.report-dir }}/report.md" || true
+        fi
+    - name: Fail on regression
+      shell: bash
+      run: |
+        if [ "${audit_exit:-0}" -ne 0 ]; then
+          echo "PromptAudit gate failed: a regression was detected."
+          exit 1
+        fi
