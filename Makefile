@@ -25,8 +25,14 @@ cov:
 bench:
 	python -m promptaudit.bench
 
+bench-baseline:
+	python -m promptaudit.bench --write-baseline
+
 bench-regress:
 	python -m promptaudit.bench --regress 30
+
+bench-smoke:
+	python -m promptaudit.bench --battery-scale 40 --quality-scale 40
 
 action-self-test:
 	promptaudit run --provider fake --baseline baselines/model_v1.json --report-dir /tmp/pa-report --battery batteries/jailbreaks.yaml --taxonomy batteries/harm_taxonomy.yaml --evalset evalsets/quality_v1.jsonl

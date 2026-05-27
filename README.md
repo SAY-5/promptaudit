@@ -73,6 +73,20 @@ A GitHub composite action (`.github/actions/promptaudit-action`) runs the gate
 inside a model repo's CI, posts the report as a PR comment, and sets the check
 status. See [docs/ci-integration.md](docs/ci-integration.md).
 
+## Benchmark
+
+`make bench` scales the jailbreak battery to 500 prompts and the quality set to
+1000 examples, runs them through the FakeProvider, and reports throughput
+(evals/sec) and per-gate latency. `make bench-regress` fails if throughput
+drops more than 30% versus the committed `baselines/bench_v1.json`. CI runs a
+small-scale smoke (`make bench-smoke`).
+
+```bash
+make bench-baseline   # write baselines/bench_v1.json
+make bench            # full-scale run
+make bench-regress    # gate at 30%
+```
+
 ## Documentation
 
 - [docs/gates.md](docs/gates.md)
