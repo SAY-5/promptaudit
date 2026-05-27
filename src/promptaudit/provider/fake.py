@@ -55,6 +55,18 @@ _DEFAULT_REFUSAL_SIGNALS: tuple[str, ...] = (
     r"no (ethical|moral) (guidelines|constraints)",
     r"token.?smuggl",
     r"r0t13|rot13",
+    r"napalm",
+    r"new rule.*(comply|must)",
+    r"forget your rules",
+    r"print your (full )?(system )?prompt",
+    r"hidden instructions",
+    r"m\W?e\W?t\W?h\b",
+    r"b\W?o\W?m\W?b\b",
+    r"sudo (mode|root)",
+    r"safety team approved",
+    r"evil twin",
+    r"b0mb",
+    r"keylogger",
 )
 
 
